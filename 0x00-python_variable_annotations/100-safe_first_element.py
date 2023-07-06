@@ -5,10 +5,10 @@ This module provides a function to safely
 retrieve the first element from a list.
 """
 
-from typing import Any, List, Optional
+from typing import Any, Sequence, Union
 
 
-def safe_first_element(lst: List[Any]) -> Optional[Any]:
+def safe_first_element(lst: Sequence[Any]) -> Union[Any, None]:
     """
     Safely retrieves the first element from the input list.
 
