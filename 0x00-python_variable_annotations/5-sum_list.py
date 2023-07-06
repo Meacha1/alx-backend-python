@@ -3,17 +3,14 @@
 '''
 
 
-def sum_list(numbers: float) -> float:
+def sum_list(input_list: list[float]) -> float:
     '''Takes a list of floats and returns the sum
     of all the floats in the list.
 
     Args:
-        numbers (list): a list of floats
+        input_list (list): a list of floats
 
     Returns:
         float: the sum of all the floats in the list.
     '''
-    sum = 0.0
-    for number in numbers:
-        sum += number
-    return sum
+    return sum(input_list)
