@@ -7,7 +7,7 @@ A script that takes float n as input a retuens a floor of the input
 def floor(n: float) -> int:
     '''
     Returns a floor of the input
-        args:
+        arg:
             n: float
         returns:
             int: floor of the input
