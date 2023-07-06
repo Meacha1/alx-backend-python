@@ -4,13 +4,14 @@
 This module provides a function to safely retrieve a value from a dictionary.
 """
 
-from typing import Any, Dict, Mapping, TypeVar, Union
+from typing import Mapping, TypeVar, Any, Union
 
 
 KT = TypeVar("KT")  # Key Type
 VT = TypeVar("VT")  # Value Type
 
-def safely_get_value(dct: Mapping[KT, VT], key: KT, default: Union[VT, None] = None) -> Union[VT, None]:
+def safely_get_value(dct: Mapping, key: Any, default: Union[T, None] = None)\
+        -> Union[Any, T]:
     """
     Safely retrieves the value associated with the key from the dictionary.
 
