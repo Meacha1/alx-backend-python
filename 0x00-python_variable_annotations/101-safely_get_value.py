@@ -7,11 +7,9 @@ This module provides a function to safely retrieve a value from a dictionary.
 from typing import Mapping, TypeVar, Any, Union
 
 
-KT = TypeVar("KT")  # Key Type
-VT = TypeVar("VT")  # Value Type
+T = TypeVar('T')
 
-def safely_get_value(dct: Mapping, key: Any, default: Union[T, None] = None)\
-        -> Union[Any, T]:
+def safely_get_value(dct: Mapping, key: Any, default: Union[T, None] = None) -> Union[Any, T]:
     """
     Safely retrieves the value associated with the key from the dictionary.
 
