@@ -1,119 +1,82 @@
 #!/usr/bin/env python3
+"""
+Utility functions for working with nested maps and API requests.
+"""
 
-import unittest
-from parameterized import parameterized
-from unittest.mock import patch, Mock
-from utils import access_nested_map, get_json, memoize
+from typing import Any, Dict, Tuple, Union
+import requests
+from functools import wraps
 
-class TestAccessNestedMap(unittest.TestCase):
+def access_nested_map(nested_map: Dict[str, Any], path: Tuple[str]) -> Union[Dict, Any]:
     """
-    Test class for the access_nested_map function.
+    Access value in a nested map using a sequence of keys.
+
+    Args:
+        nested_map (dict): The nested map (dictionary) to traverse.
+        path (tuple): The sequence of keys to access the desired value.
+
+    Returns:
+        Union[dict, Any]: The value at the given path in the nested map, or the nested map itself.
+
+    Example:
+        >>> access_nested_map({"a": {"b": 2}}, ("a",))
+        {"b": 2}
+
+        >>> access_nested_map({"a": {"b": 2}}, ("a", "b"))
+        2
     """
+    for key in path:
+        nested_map = nested_map[key]
+    return nested_map
 
-    @parameterized.expand([
-        ({"a": 1}, ("a",), 1),
-        ({"a": {"b": 2}}, ("a",), {"b": 2}),
-        ({"a": {"b": 2}}, ("a", "b"), 2),
-    ])
-    def test_access_nested_map(self, nested_map: dict, path: tuple, expected_result):
-        """
-        Test the access_nested_map function for various inputs.
-
-        Args:
-            nested_map (dict): The nested dictionary to access.
-            path (tuple): The path to the desired value in the nested dictionary.
-            expected_result: The expected result when accessing the nested dictionary.
-
-        Returns:
-            None
-        """
-        result = access_nested_map(nested_map, path)
-        self.assertEqual(result, expected_result)
-
-    @parameterized.expand([
-        ({}, ("a",)),
-        ({"a": 1}, ("a", "b")),
-    ])
-    def test_access_nested_map_exception(self, nested_map: dict, path: tuple):
-        """
-        Test that KeyError is raised for specific inputs.
-
-        Args:
-            nested_map (dict): The nested dictionary to access.
-            path (tuple): The path to the desired value in the nested dictionary.
-
-        Returns:
-            None
-        """
-        with self.assertRaises(KeyError) as context:
-            access_nested_map(nested_map, path)
-
-        expected_error_msg = 'Key not found: "{}"'.format(path[-1])
-        self.assertEqual(str(context.exception), expected_error_msg)
-
-class TestGetJson(unittest.TestCase):
+def get_json(url: str) -> Dict[str, Any]:
     """
-    Test class for the get_json function.
+    Perform an HTTP GET request to fetch JSON data from the given URL.
+
+    Args:
+        url (str): The URL to make the GET request.
+
+    Returns:
+        Dict[str, Any]: The JSON data retrieved from the URL.
+
+    Example:
+        >>> get_json("https://api.github.com/users/octocat")
+        {"login": "octocat", "id": 1, ...}
     """
+    response = requests.get(url)
+    return response.json()
 
-    @parameterized.expand([
-        ("http://example.com", {"payload": True}),
-        ("http://holberton.io", {"payload": False}),
-    ])
-    @patch('utils.requests.get')
-    def test_get_json(self, test_url, test_payload, mock_get):
-        """
-        Test the get_json function with mocked HTTP calls.
-
-        Args:
-            test_url (str): The URL to be used in the test.
-            test_payload (dict): The expected payload to be returned.
-            mock_get (MagicMock): The mocked get method from requests module.
-
-        Returns:
-            None
-        """
-        mock_get.return_value = Mock()
-        mock_get.return_value.json.return_value = test_payload
-
-        result = get_json(test_url)
-        self.assertEqual(result, test_payload)
-        mock_get.assert_called_once_with(test_url)
-
-class TestMemoize(unittest.TestCase):
+def memoize(func: Any) -> Any:
     """
-    Test class for the memoize decorator.
+    Memoization decorator to cache the result of a method.
+
+    Args:
+        func (callable): The method to be memoized.
+
+    Returns:
+        Any: The cached result of the method.
+
+    Example:
+        >>> class TestClass:
+        ...     @memoize
+        ...     def expensive_operation(self, x):
+        ...         print("Doing expensive operation...")
+        ...         return x * x
+        ...
+        >>> test_object = TestClass()
+        >>> result1 = test_object.expensive_operation(5)  # This will do the expensive operation
+        >>> result2 = test_object.expensive_operation(5)  # This will use the memoized result
+        >>> print(result1)
+        25
+        >>> print(result2)
+        25
     """
+    cache = {}
 
-    class TestClass:
+    @wraps(func)
+    def wrapper(*args):
+        if args not in cache:
+            cache[args] = func(*args)
+        return cache[args]
 
-        def a_method(self):
-            return 42
-
-        @memoize
-        def a_property(self):
-            return self.a_method()
-
-    @patch.object(TestClass, 'a_method')
-    def test_memoize(self, mock_a_method):
-        """
-        Test the memoize decorator.
-
-        Args:
-            mock_a_method (MagicMock): The mocked a_method.
-
-        Returns:
-            None
-        """
-        instance = TestClass()
-        mock_a_method.return_value = 42
-
-        result1 = instance.a_property
-        result2 = instance.a_property
-
-        self.assertEqual(result1, 42)
-        self.assertEqual(result2, 42)
-        mock_a_method.assert_called_once()
-
-if __name__ == "__main__":
-    unittest.main()
+    return wrapper
