@@ -6,6 +6,7 @@ from parameterized import parameterized
 from unittest.mock import patch
 from utils import access_nested_map, get_json, memoize
 
+
 class TestAccessNestedMap(unittest.TestCase):
     """Test cases for access_nested_map function"""
 
@@ -22,10 +23,12 @@ class TestAccessNestedMap(unittest.TestCase):
         ({}, ("a",), KeyError),
         ({"a": 1}, ("a", "b"), KeyError),
     ])
-    def test_access_nested_map_exception(self, nested_map, path, expected_exception):
+    def test_access_nested_map_exception(self, nested_map, path,
+                                         expected_exception):
         """Test access_nested_map function for exceptions"""
         with self.assertRaises(expected_exception):
             access_nested_map(nested_map, path)
+
 
 class TestGetJson(unittest.TestCase):
     """Test cases for get_json function"""
@@ -44,6 +47,7 @@ class TestGetJson(unittest.TestCase):
 
         mock_get.assert_called_once_with(test_url)
         self.assertEqual(result, test_payload)
+
 
 class TestMemoize(unittest.TestCase):
     """Test cases for memoize decorator"""
@@ -73,6 +77,7 @@ class TestMemoize(unittest.TestCase):
             mock_a_method.assert_called_once()
             self.assertEqual(result1, 42)
             self.assertEqual(result2, 42)
+
 
 if __name__ == "__main__":
     unittest.main()
