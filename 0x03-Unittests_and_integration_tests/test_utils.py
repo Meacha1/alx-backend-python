@@ -18,7 +18,7 @@ class TestAccessNestedMap(unittest.TestCase):
         ({"a": {"b": 2}}, ("a",), {"b": 2}),
         ({"a": {"b": 2}}, ("a", "b"), 2),
     ])
-    def test_access_nested_map(self, nested_map: dict, path: tuple, expected_result):
+    def test_access_nested_map(self, nested_map, path, expected_result):
         """
         Test the access_nested_map function for various inputs.
 
@@ -37,7 +37,7 @@ class TestAccessNestedMap(unittest.TestCase):
         ({}, ("a",)),
         ({"a": 1}, ("a", "b")),
     ])
-    def test_access_nested_map_exception(self, nested_map: dict, path: tuple):
+    def test_access_nested_map_exception(self, nested_map, path):
         """
         Test that KeyError is raised for specific inputs.
 
@@ -51,7 +51,7 @@ class TestAccessNestedMap(unittest.TestCase):
         with self.assertRaises(KeyError) as context:
             access_nested_map(nested_map, path)
 
-        expected_error_msg = f"Key not found: '{path[-1]}'"
+        expected_error_msg = 'Key not found: "{}"'.format(path[-1])
         self.assertEqual(str(context.exception), expected_error_msg)
 
 if __name__ == "__main__":
