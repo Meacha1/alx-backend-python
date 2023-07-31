@@ -1,82 +1,78 @@
 #!/usr/bin/env python3
-"""
-Utility functions for working with nested maps and API requests.
-"""
+"""Unit tests for utils.py"""
 
-from typing import Any, Dict, Tuple, Union
-import requests
-from functools import wraps
+import unittest
+from parameterized import parameterized
+from unittest.mock import patch
+from utils import access_nested_map, get_json, memoize
 
-def access_nested_map(nested_map: Dict[str, Any], path: Tuple[str]) -> Union[Dict, Any]:
-    """
-    Access value in a nested map using a sequence of keys.
+class TestAccessNestedMap(unittest.TestCase):
+    """Test cases for access_nested_map function"""
 
-    Args:
-        nested_map (dict): The nested map (dictionary) to traverse.
-        path (tuple): The sequence of keys to access the desired value.
+    @parameterized.expand([
+        ({"a": 1}, ("a",), 1),
+        ({"a": {"b": 2}}, ("a",), {"b": 2}),
+        ({"a": {"b": 2}}, ("a", "b"), 2),
+    ])
+    def test_access_nested_map(self, nested_map, path, expected_result):
+        """Test access_nested_map function"""
+        self.assertEqual(access_nested_map(nested_map, path), expected_result)
 
-    Returns:
-        Union[dict, Any]: The value at the given path in the nested map, or the nested map itself.
+    @parameterized.expand([
+        ({}, ("a",), KeyError),
+        ({"a": 1}, ("a", "b"), KeyError),
+    ])
+    def test_access_nested_map_exception(self, nested_map, path, expected_exception):
+        """Test access_nested_map function for exceptions"""
+        with self.assertRaises(expected_exception):
+            access_nested_map(nested_map, path)
 
-    Example:
-        >>> access_nested_map({"a": {"b": 2}}, ("a",))
-        {"b": 2}
+class TestGetJson(unittest.TestCase):
+    """Test cases for get_json function"""
 
-        >>> access_nested_map({"a": {"b": 2}}, ("a", "b"))
-        2
-    """
-    for key in path:
-        nested_map = nested_map[key]
-    return nested_map
+    @parameterized.expand([
+        ("http://example.com", {"payload": True}),
+        ("http://holberton.io", {"payload": False}),
+    ])
+    @patch('utils.requests.get')
+    def test_get_json(self, test_url, test_payload, mock_get):
+        """Test get_json function"""
+        mock_response = mock_get.return_value
+        mock_response.json.return_value = test_payload
 
-def get_json(url: str) -> Dict[str, Any]:
-    """
-    Perform an HTTP GET request to fetch JSON data from the given URL.
+        result = get_json(test_url)
 
-    Args:
-        url (str): The URL to make the GET request.
+        mock_get.assert_called_once_with(test_url)
+        self.assertEqual(result, test_payload)
 
-    Returns:
-        Dict[str, Any]: The JSON data retrieved from the URL.
+class TestMemoize(unittest.TestCase):
+    """Test cases for memoize decorator"""
 
-    Example:
-        >>> get_json("https://api.github.com/users/octocat")
-        {"login": "octocat", "id": 1, ...}
-    """
-    response = requests.get(url)
-    return response.json()
+    class TestClass:
+        """Test class for memoize decorator"""
 
-def memoize(func: Any) -> Any:
-    """
-    Memoization decorator to cache the result of a method.
+        def a_method(self):
+            """Test method for memoize decorator"""
+            return 42
 
-    Args:
-        func (callable): The method to be memoized.
+        @memoize
+        def a_property(self):
+            """Test property for memoize decorator"""
+            return self.a_method()
 
-    Returns:
-        Any: The cached result of the method.
+    def test_memoize(self):
+        """Test memoize decorator"""
+        my_object = self.TestClass()
 
-    Example:
-        >>> class TestClass:
-        ...     @memoize
-        ...     def expensive_operation(self, x):
-        ...         print("Doing expensive operation...")
-        ...         return x * x
-        ...
-        >>> test_object = TestClass()
-        >>> result1 = test_object.expensive_operation(5)  # This will do the expensive operation
-        >>> result2 = test_object.expensive_operation(5)  # This will use the memoized result
-        >>> print(result1)
-        25
-        >>> print(result2)
-        25
-    """
-    cache = {}
+        with patch.object(my_object, 'a_method') as mock_a_method:
+            mock_a_method.return_value = 42
 
-    @wraps(func)
-    def wrapper(*args):
-        if args not in cache:
-            cache[args] = func(*args)
-        return cache[args]
+            result1 = my_object.a_property
+            result2 = my_object.a_property
 
-    return wrapper
+            mock_a_method.assert_called_once()
+            self.assertEqual(result1, 42)
+            self.assertEqual(result2, 42)
+
+if __name__ == "__main__":
+    unittest.main()
